@@ -16,7 +16,7 @@ import acm.util.RandomGenerator;
 public class BreakoutTheGame_GraphicsProgram_Extension extends GraphicsProgram {
 
 	/** Dimensions of the paddle */
-	private static final int PADDLE_WIDTH = 30;
+	private int PADDLE_WIDTH;
 	private static final int PADDLE_HEIGHT = 10;
 
 	/** Offset of the paddle up from the bottom */
@@ -49,10 +49,12 @@ public class BreakoutTheGame_GraphicsProgram_Extension extends GraphicsProgram {
 	private static final double PAUSE = 60;
 
 	public void run() {
+		waitForClick();
 		BRICK_WIDTH = (getWidth() - BRICK_SEP * 2) / NBRICKS_PER_ROW;
 		BALL_RADIUS = BRICK_WIDTH / 4;
+		PADDLE_WIDTH = BALL_RADIUS * 8;
 		setup();
-		waitForClick();
+		waitingForUserClick();
 		startBallMovement();
 	}
 
@@ -64,6 +66,21 @@ public class BreakoutTheGame_GraphicsProgram_Extension extends GraphicsProgram {
 		setupBricks();
 		createPaddle();
 		createBall();
+	}
+	
+	/**
+	 * EXTENSION 1:
+	 * adds a message stating "click to begin!!", and once user click removes the
+	 * message and starts the game
+	 */
+	private void waitingForUserClick() {
+		GLabel label = new GLabel("Click to begin!!");
+		label.setFont("SansSerif-15");
+		label.setLocation((getWidth() - label.getWidth()) / 2,
+				NBRICK_ROWS * BRICK_HEIGHT + BRICK_SEP + BRICK_Y_OFFSET + 2 * BALL_RADIUS + label.getAscent());
+		add(label);
+		waitForClick();
+		remove(label);
 	}
 
 	// This method will initialize the ball movement
@@ -81,34 +98,55 @@ public class BreakoutTheGame_GraphicsProgram_Extension extends GraphicsProgram {
 			double y = ball.getY();
 			double x = ball.getX();
 
-			// this will get any colliding object with the ball
-			// if the collider is brick, then brick will be removed and
-			// score will be increased
-			// if the collider is paddle, then ball will bounce back
+			/*
+			 * this will get any colliding object with the ball if the collider is brick,
+			 * then brick will be removed and score will be increased if the collider is
+			 * paddle, then ball will bounce back
+			 */
 			GObject collider = getCollidingObject();
 			if (collider != null) {
 				if (collider == paddle || collider == scoreLabel) {
+					
+					/*
+					 * EXTENSION 2 - Improve the user control over bounces: ball would bounce in both
+					 * the x and y directions if you hit it on the edge of the paddle from which the
+					 * ball was coming.
+					 */
+					double paddleLeftCorner = paddle.getX();
+					double paddleRightCorner = paddleLeftCorner + PADDLE_WIDTH;
+					if(x <= paddleLeftCorner || x + 2 * BALL_RADIUS >= paddleRightCorner) {
+						vx = -vx;
+					}
+					
 					vy = -vy;
-
-					// Just before the ball is going to pass the paddle
-					// level, move the paddle
-					// quickly so that the paddle collides with the ball
-					// rather than vice-versa. Does everything still
-					// work, or does your ball seem to get “glued” to the
-					// paddle? If you get this error, try to
-					// understand why it occurs and how you might fix it
-					// To solve this I am thinking to add below statements,
-					// that will check the collision with paddle
-					// whenever the paddle is moved, and if the collision is
-					// found then it will make sure that the ball goes
-					// upwards.
+					
+					/*
+					 * Just before the ball is going to pass the paddle level, move the paddle
+					 * quickly so that the paddle collides with the ball rather than vice-versa.
+					 * Does everything still work, or does your ball seem to get “glued” to the
+					 * paddle? If you get this error, try to understand why it occurs and how you
+					 * might fix it To solve this I am thinking to add below statements, that will
+					 * check the collision with paddle whenever the paddle is moved, and if the
+					 * collision is found then it will make sure that the ball goes upwards.
+					 */
 					if ((ball.getY() + BALL_RADIUS * 2) > (getHeight() - PADDLE_Y_OFFSET - PADDLE_HEIGHT)) {
 						ball.move(vx,
 								-((ball.getY() + BALL_RADIUS * 2) - (getHeight() - PADDLE_Y_OFFSET - PADDLE_HEIGHT)));
 					}
-
+					
+					//TODO 
+					/*
+					 * EXTENSION 3: Adding the “kicker.” doubling the horizontal velocity of the
+					 * ball the seventh time it hits the paddle
+					 */
+					paddleHit++;
+					if(paddleHit % 7 == 0) {
+						vx *= 1.2;
+					}
+					
+					
 				} else {
-					updateScoreLabel();
+					updateScoreLabel(collider);
 					bricksCount--;
 					remove(collider);
 					vy = -vy;
@@ -134,9 +172,8 @@ public class BreakoutTheGame_GraphicsProgram_Extension extends GraphicsProgram {
 				} else {
 					currentTurn++;
 					createBall();
-					setRandomVxForBall();
 					setRandomVyForBall();
-					waitForClick();
+					waitingForUserClick();
 				}
 			}
 
@@ -187,11 +224,28 @@ public class BreakoutTheGame_GraphicsProgram_Extension extends GraphicsProgram {
 	}
 
 	/*
+	 * EXTENSION 4:
 	 * This method will update the score board label, which is shown just below
 	 * the paddle for showing the score to the player
+	 * Also the scores will be calculated as bricks are more valuable higher up in 
+	 * the array, so that you got more points for red bricks than cyan bricks.
 	 */
-	private void updateScoreLabel() {
-		score++;
+	private void updateScoreLabel(GObject collider) {
+
+		int value = 1;
+		Color color = ((GRect)collider).getFillColor();
+		if(color == Color.RED) {
+			value = 5;
+		}else if(color == Color.ORANGE) {
+			value = 4;
+		}else if(color == Color.YELLOW) {
+			value = 3;
+		}else if(color == Color.GREEN) {
+			value = 2;
+		}else if(color == Color.BLUE) {
+			value = 1;
+		}
+		score += value;
 		scoreLabel.setLabel(score + "");
 	}
 
@@ -370,5 +424,8 @@ public class BreakoutTheGame_GraphicsProgram_Extension extends GraphicsProgram {
 
 	/* Count of bricks */
 	private int bricksCount = 0;
+
+	/* Count of hits taken by paddle */
+	private int paddleHit = 0;
 	
 }
