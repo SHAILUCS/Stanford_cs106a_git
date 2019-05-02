@@ -15,8 +15,10 @@ public class ForeverMultipleBouncingBalls extends GraphicsProgram {
 	public void run() {
 		pause(2000);
 		
+		// An Array of balls
 		GOval[] balls = new GOval[BALLS_COUNT];
 
+		// Creating and adding the balls to the canvas
 		for (int i = 0; i < balls.length; i++) {
 			GOval ball = new GOval(rgen.nextInt(getWidth()), rgen.nextInt(getHeight()), BALL_DIAMETER, BALL_DIAMETER);
 			ball.setFilled(true);
@@ -25,9 +27,13 @@ public class ForeverMultipleBouncingBalls extends GraphicsProgram {
 			balls[i]=ball;
 		}
 
+		// Starting the movement
 		moveBalls(balls);
 	}
 
+	/**
+	 * Will move the balls forever in the canvas
+	 * */
 	private void moveBalls(GOval[] balls) {
 		double[] xOffset = new double[BALLS_COUNT];
 		double[] yOffset = new double[BALLS_COUNT];
@@ -35,8 +41,15 @@ public class ForeverMultipleBouncingBalls extends GraphicsProgram {
 		
 		
 		for (int i = 0; i < balls.length; i++) {
-			xOffset[i]= MOVE_X;
-			yOffset[i]= MOVE_Y;
+			double vx = rgen.nextDouble(1.0, MOVE_X);
+			if (rgen.nextBoolean(0.5))
+				vx = -vx;
+			
+			double vy = rgen.nextDouble(1.0, MOVE_Y);
+			if (rgen.nextBoolean(0.5))
+				vy = -vy;
+			xOffset[i]= vx ;
+			yOffset[i]= vy ;
 			velocity[i]=rgen.nextDouble(1.00,1.02);
 		}
 		
