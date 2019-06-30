@@ -1,12 +1,13 @@
 package lect10._21_bouncing_ball_example;
 
+import acm.graphics.GObject;
 import acm.graphics.GOval;
 import acm.program.GraphicsProgram;
 import acm.util.RandomGenerator;
 
 public class ForeverMultipleBouncingBalls extends GraphicsProgram {
 
-	private static final int BALLS_COUNT = 50;
+	private static final int BALLS_COUNT = 20;
 	private static final double BALL_DIAMETER = 20;
 	private static final double MOVE_X = 5;
 	private static final double MOVE_Y = 5;
@@ -60,11 +61,11 @@ public class ForeverMultipleBouncingBalls extends GraphicsProgram {
 				double x = balls[i].getX();
 
 				if ((y + BALL_DIAMETER) >= getHeight() || y < 0) {
-					yOffset[i] = -yOffset[i]*velocity[i];
+					yOffset[i] = -yOffset[i];//*velocity[i];
 				}
 
 				if ((x + BALL_DIAMETER) >= getWidth() || x < 0) {
-					xOffset[i] = -xOffset[i]*velocity[i];
+					xOffset[i] = -xOffset[i];//*velocity[i];
 				}
 				
 				balls[i].move(xOffset[i], yOffset[i]);
@@ -77,8 +78,46 @@ public class ForeverMultipleBouncingBalls extends GraphicsProgram {
 					balls[i].move(-(balls[i].getX() + BALL_DIAMETER - getWidth()), MOVE_Y);
 				}
 
+				if(checkForCollision(balls[i])) {
+					xOffset[i] = -xOffset[i];
+					yOffset[i] = -yOffset[i];
+				}
 			}
 		}
+	}
+
+	/**
+	 * The idea behind this method is to create a bounce effect, 
+	 * when two balls collide with each other.
+	 * This will check if the ball collide with some other ball,
+	 * if ball collides then this will return true,
+	 * which can be used to deflect the dx and dy of passed ball
+	 * */
+	private boolean checkForCollision(GOval gOval) {
+		 double x = gOval.getX();
+		 double y = gOval.getY();
+
+		GObject object = getElementAt(x, y);
+		if(object != null) {
+			return object instanceof GOval;
+		}
+
+		object = getElementAt(x + BALL_DIAMETER, y);
+		if(object != null) {
+			return object instanceof GOval;
+		}
+
+		object = getElementAt(x, y + BALL_DIAMETER);
+		if(object != null) {
+			return object instanceof GOval;
+		}
+		
+		object = getElementAt(x + BALL_DIAMETER, y + BALL_DIAMETER);
+		if(object != null) {
+			return object instanceof GOval;
+		}
+		
+		return false;
 	}
 
 	/** ivars */
